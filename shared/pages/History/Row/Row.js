@@ -10,6 +10,7 @@ import { FormattedMessage } from 'react-intl'
 import actions from 'redux/actions'
 import { constants } from 'helpers'
 import CommentRow from './Comment'
+import Tooltip from 'components/ui/Tooltip/Tooltip'
 
 
 
@@ -27,6 +28,15 @@ class Row extends React.PureComponent {
       cancelled: false,
       payed: false,
     }
+    this.getUsdBalance( type )
+  }
+
+  getUsdBalance = async (type) => {
+    actions.user.getExchangeRate(type, 'usd').then((exCurrencyRate) => {
+      this.setState(() => ({
+        exCurrencyRate
+      }))
+    })
   }
 
   handlePayInvoice = async () => {
@@ -103,7 +113,7 @@ class Row extends React.PureComponent {
   }
 
   parseFloat = (direction, value, directionType, type) => {
-
+    const { txType } = this.props
     switch (type) {
       case 'btc (sms-protected)': type = 'BTC 2'
         break;
@@ -114,7 +124,9 @@ class Row extends React.PureComponent {
     return (
       <Fragment>
       {direction === directionType ?
-        <div styleName="amount">{`+ ${parseFloat(Number(value).toFixed(5))}`} {type.toUpperCase()}</div> :
+        <div styleName="amount">{`+ ${parseFloat(Number(value).toFixed(5))}`} {type.toUpperCase()}
+         {txType === 'INVOICE' ? <span styleName="smallTooltip"><Tooltip>Invoice</Tooltip></span> : ''}
+        </div> :
         <div styleName="amount">{`- ${parseFloat(Number(value).toFixed(5))}`} {type.toUpperCase()}</div>
       }
     </Fragment> 
@@ -243,6 +255,7 @@ class Row extends React.PureComponent {
             <div styleName={statusStyleAmount}>
               {invoiceData ? this.parseFloat(direction, value, 'out', type) : this.parseFloat(direction, value, 'in', type)}
               <span styleName='amountUsd'>{`~ $${getUsd.toFixed(2)}`}</span>
+              
             </div>
             {/* <LinkTransaction type={type} styleName='address' hash={hash} >{hash}</LinkTransaction> */}
           </td>
